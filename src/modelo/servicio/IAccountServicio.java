@@ -1,8 +1,9 @@
 package modelo.servicio;
 
 import exceptions.SaldoInsuficienteException;
-import modelo.AccMovement;
-import modelo.Account;
+import modelo.ud3.AccMovement;
+import modelo.ud3.Account;
+import modelo.ud3.Empleado;
 
 import java.util.List;
 
@@ -21,4 +22,9 @@ public interface IAccountServicio {
 			throws  InstanceNotFoundException;
 	
 	public boolean delete(int accId) throws InstanceNotFoundException;
+	
+	
+	public Account addAccountToEmployee(int empno, Account acc);
+	
+	public List<Empleado> getTitularesByAccountId(int accId)throws InstanceNotFoundException;
 }

@@ -25,10 +25,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import modelo.AccMovement;
-import modelo.Account;
+import modelo.ud3.AccMovement;
+import modelo.ud3.Account;
 
-import modelo.Empleado;
+import modelo.ud3.Empleado;
 import modelo.servicio.AccountServicio;
 
 import modelo.servicio.EmpleadoServicio;
@@ -182,7 +182,8 @@ public class AccountWindow extends JFrame {
 
 							AccountWindow.this.empleado = empleadoServicio.find(empno);
 						}
-						nuevaAcc.setEmp(AccountWindow.this.empleado);
+						nuevaAcc.getEmployees().add(AccountWindow.this.empleado);
+						//setEmp(AccountWindow.this.empleado);
 						JFrame owner = (JFrame) SwingUtilities.getRoot((Component) e.getSource());
 
 						createDialog = new CreateUpdateAccountDialog(owner, "Crear nueva cuenta",
@@ -229,6 +230,21 @@ public class AccountWindow extends JFrame {
 						Account accountd = (Account) JListAllAccounts.getModel().getElementAt(selectedIx);
 						if (accountd != null) {
 							addMensaje(true, "Se ha seleccionado el d: " + accountd);
+							try {
+								List<Empleado> titulares= accountServicio.getTitularesByAccountId(accountd.getAccountno());
+								addMensaje(true, "Los titulares de la cuenta con accid: "+ accountd.getAccountno() + " son:\n");
+								for (Empleado empleado : titulares) {
+									addMensaje(true, "     " +empleado.getEmpno()+"\n");
+								}
+							} catch (exceptions.InstanceNotFoundException e1) {
+								addMensaje(true, "No se ha podido encontrar la cuenta con id: "
+										+ accountd.getAccountno());
+							} catch (Exception ex) {
+								addMensaje(true, "No se ha podido obtener los titulares de la cuenta.con id: "+
+							accountd.getAccountno());
+								System.out.println("Exception: " + ex.getMessage());
+								ex.printStackTrace();
+							}
 						}
 					}
 				}
@@ -359,7 +375,7 @@ public class AccountWindow extends JFrame {
 
 	private void save(Account cuenta) {
 		try {
-			Account nuevo = accountServicio.saveOrUpdate(cuenta);
+			Account nuevo = accountServicio.addAccountToEmployee(this.empleado.getEmpno(), cuenta);
 			if (nuevo != null) {
 				addMensaje(true, "Se ha creado una cuenta con id: " + nuevo.getAccountno());
 				getAllAccounts();

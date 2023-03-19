@@ -15,7 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
-import modelo.Account;
+import modelo.ud3.Account;
 
 import java.awt.Color;
 

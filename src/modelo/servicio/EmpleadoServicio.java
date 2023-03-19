@@ -4,7 +4,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 
 import exceptions.InstanceNotFoundException;
-import modelo.Empleado;
+import modelo.ud3.Empleado;
 import util.SessionFactoryUtil;
 
 public class EmpleadoServicio implements IEmpleadoServicio{

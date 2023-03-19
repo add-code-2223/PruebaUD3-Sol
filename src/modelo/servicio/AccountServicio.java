@@ -2,6 +2,7 @@ package modelo.servicio;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Session;
@@ -9,9 +10,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import exceptions.SaldoInsuficienteException;
-import modelo.AccMovement;
-import modelo.Account;
-import modelo.Departamento;
+import modelo.ud3.AccMovement;
+import modelo.ud3.Account;
+import modelo.ud3.Departamento;
+import modelo.ud3.Empleado;
 import exceptions.InstanceNotFoundException;
 import util.SessionFactoryUtil;
 
@@ -151,7 +153,8 @@ public class AccountServicio implements IAccountServicio {
 		SessionFactory sessionFactory = SessionFactoryUtil.getSessionFactory();
 		Session session = sessionFactory.openSession();
 
-		List<Account> accounts = session.createQuery("select a from Account a where a.emp.empno =:empno")
+		List<Account> accounts = session
+				.createQuery("select a from Account a " + "join a.employees e where e.empno = :empno")
 				.setParameter("empno", empno).list();
 
 		session.close();
@@ -181,6 +184,67 @@ public class AccountServicio implements IAccountServicio {
 		return d;
 	}
 
+	public Account addAccountToEmployee(int empno, Account acc) {
+		SessionFactory sessionFactory = SessionFactoryUtil.getSessionFactory();
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		boolean exito = false;
+
+		try {
+			tx = session.beginTransaction();
+			Empleado empleado = session.get(Empleado.class, empno);
+			if (empleado != null) {
+//				acc.getEmployees().add(empleado);
+//				empleado.getAccounts().add(acc);
+				empleado.addAccount(acc);
+			}
+			session.save(acc);
+			session.saveOrUpdate(empleado);
+			tx.commit();
+			
+		} catch (Exception ex) {
+			System.out.println("Ha ocurrido una excepción en addAccountToEmployee : " + ex.getMessage());
+			if (tx != null) {
+				tx.rollback();
+			}
+			throw ex;
+		} finally {
+			session.close();
+		}
+		return acc;
+	}
+	
+	
+	public List<Empleado> getTitularesByAccountId(int accId)throws InstanceNotFoundException{
+		SessionFactory sessionFactory = SessionFactoryUtil.getSessionFactory();
+		Session session = sessionFactory.openSession();
+		Transaction tx = null;
+		boolean exito = false;
+		List<Empleado> empleados =new ArrayList<>();
+		try {
+		
+			Account account = session.get(Account.class, accId);
+			if (account != null) {
+				
+				 empleados = account.getEmployees().stream().toList();
+//				for (Empleado empleado : empleados) {
+//					empleado.getEmpno()
+//				}
+			} else {
+				throw new InstanceNotFoundException(Departamento.class.getName() + " id: " + accId);
+			}
+			
+		} catch (Exception ex) {
+			System.out.println("Ha ocurrido una excepción en create Dept: " + ex.getMessage());
+			
+
+			throw ex;
+		} finally {
+			session.close();
+		}
+		return empleados;
+	}
+
 	public boolean delete(int accId) throws InstanceNotFoundException {
 		SessionFactory sessionFactory = SessionFactoryUtil.getSessionFactory();
 		Session session = sessionFactory.openSession();
@@ -191,6 +255,17 @@ public class AccountServicio implements IAccountServicio {
 			tx = session.beginTransaction();
 			Account account = session.get(Account.class, accId);
 			if (account != null) {
+				
+				for (AccMovement accs : account.getAccMovementsForAccountDestId()) {
+					session.remove(accs);
+				}
+				
+				for (AccMovement accs : account.getAccMovementsForAccountOriginId()) {
+					session.remove(accs);
+				}
+				for(Empleado emp: account.getEmployees()){
+					emp.getAccounts().remove(account);
+				}
 				session.remove(account);
 			} else {
 				throw new InstanceNotFoundException(Departamento.class.getName() + " id: " + accId);
