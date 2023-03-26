@@ -255,7 +255,7 @@ public class AccountServicio implements IAccountServicio {
 			tx = session.beginTransaction();
 			Account account = session.get(Account.class, accId);
 			if (account != null) {
-				
+				//Si no se usa cascade en Account.java para getAccMovementsX, se eliminan explícitamente
 				for (AccMovement accs : account.getAccMovementsForAccountDestId()) {
 					session.remove(accs);
 				}
@@ -263,6 +263,7 @@ public class AccountServicio implements IAccountServicio {
 				for (AccMovement accs : account.getAccMovementsForAccountOriginId()) {
 					session.remove(accs);
 				}
+				//Del conjunto de los titulares, eliminamos la cuenta.
 				for(Empleado emp: account.getEmployees()){
 					emp.getAccounts().remove(account);
 				}
